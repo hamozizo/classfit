@@ -1,9 +1,10 @@
 version: 0.2
 
+
 phases:
   pre_build:
     commands:
-       - echo Logging in to Amazon ECR...
+      - echo Logging in to Amazon ECR...
       - aws --version
       - aws_account_id="3094-2937-0847"
       - aws_region="us-east-2"
@@ -11,11 +12,12 @@ phases:
       - REPOSITORY_URI=309429370847.dkr.ecr.us-east-2.amazonaws.com/chatbot-app
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
-      build:
+  build:
     commands:
-       - echo Build started on `date`
+      - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t $REPOSITORY_URI:latest .      
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
       - echo Build completed on `date`
@@ -23,11 +25,9 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
-      - printf '[{"name":"images-test","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_BUILD_NUMBER > imagedefinitions.json
-      - printf '[{"name":"Images-stage","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_BUILD_NUMBER > imagedefinitions_stage.json
-      - printf '[{"name":"aws_s3","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_BUILD_NUMBER > imagedefinitions_prod.json
+      - printf '[{"name":"order-service","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
 artifacts:
-    files: 
-    - imagedefinitions.json
-    - imagedefinitions_stage.json
-    - imagedefinitions_prod.json
+  files:
+   - imagedefinitions.json
+   - target/order-service.jar
