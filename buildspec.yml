@@ -4,7 +4,6 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - mvn clean install
       - echo Logging in to Amazon ECR...
       - aws --version
       - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
